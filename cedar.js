@@ -2,19 +2,99 @@
 
     'use strict';
 
-    var Cedar = {};
+    var c = function ( selector, context ) {
 
-    Cedar.query = function(selector) {
-        return document.querySelector(selector);
-    };
+        var Cedar = function () {
+            this.context = context;
+            this.nodes = context ? context.querySelectorAll( selector ) : document.querySelectorAll( selector );
+        };
 
-    Cedar.queryAll = function(selector) {
-        return document.querySelectorAll(selector);
+        Cedar.prototype.classes = function () {
+            return this;
+        };
+
+        Cedar.prototype.classes.add = function ( className ) {
+            for ( var i = 0; i < this.nodes.length; i++ ) {
+                this.nodes[i].classList.add( className );
+            }
+            return this;
+        };
+        Cedar.prototype.classes.remove = function ( className ) {
+            for ( var i = 0; i < this.nodes.length; i++ ) {
+                this.nodes[i].classList.remove( className );
+            }
+            return this;
+        };
+        Cedar.prototype.classes.toggle = function ( className ) {
+            for ( var i = 0; i < this.nodes.length; i++ ) {
+                this.nodes[i].classList.toggle( className );
+            }
+            return this;
+        };
+
+        Cedar.prototype.events = function () {
+            return this;
+        };
+
+        Cedar.prototype.events.on( event, handler, capture ) {
+            capture = capture == null ? false : true;
+            var events = event.split(/ /);
+            for ( i = 0; i < events.length; i++ ) {
+                for ( var j = 0; j < this.nodes.length; j++ ) {
+                    this.nodes[j].addEventListener( events[i], handler, capture );
+                }
+            }
+            return this;
+        };
+
+        Cedar.prototype.events.off( event, handler, capture ) {
+            capture = capture == null ? false : true;
+            var events = event.split(/ /);
+            for ( i = 0; i < events.length; i++ ) {
+                for ( var j = 0; j < this.nodes.length; j++ ) {
+                    this.nodes[j].removeEventListener( events[i], handler, capture );
+                }
+            }
+            return this;
+        };
+
+        Cedar.prototype.events.dispatch( event ) {
+            if ( this.context.createEvent ) {
+                // dispatch for firefox + others
+                for ( var i = 0; i < this.nodes.length; i++ ) {
+                    var createdEvent = document.createEvent( 'HTMLEvents' );
+                    createdEvent.initEvent( event, true, true );
+                    this.nodes[i].dispatchEvent( createdEvent );
+                }
+            } else {
+                // dispatch for IE
+                for ( var i = 0; i < this.nodes.length; i++ ) {
+                    var createdEvent = document.createEventObject();
+                    this.nodes[i].fireEvent('on' + event, createdEvent );
+                }
+            }
+
+            return this;
+        };
+
+        Cedar.prototype.dom = function () {
+            return this;
+        };
+
+        Cedar.prototype.dom.insertAfter = function ( newNode ) {
+            for ( var i = 0; i < this.nodes.length; i++ ) {
+                this.nodes[i].parentNode.insertBefore( newNode, this.nodes[i].nextSibling );
+            }
+
+            return this;
+
+		};
+
+        return new Cedar();
+
     };
 
     /*
-	 * Cedar XHR request plain text
-	 */
 	Cedar.requestPlainText = function ( options ) {
 
 		var xhr = new XMLHttpRequest();
@@ -29,9 +109,6 @@
         xhr.send();
 	};
 
-	/*
-	 * Cedar XHR post form
-	 */
 	Cedar.post = function ( options ) {
 
 		var xhr = new XMLHttpRequest();
@@ -49,9 +126,6 @@
 	};
 
 
-    /*
-     * Cedar event functions
-     */
     Cedar.events = {
 
         on: function(element, event, handler, capture) {
@@ -87,9 +161,6 @@
     };
 
 
-    /*
-     * Cedar class manipulation functions
-     */
     Cedar.classes = {
 
         add: function(element, className) {
@@ -122,16 +193,10 @@
 
     };
 
-    /*
-     * Cedar utility functions
-     */
     Cedar.utilities = {
     };
 
 
-    /*
-     * Cedar dom functions
-     */
 	Cedar.dom = {
 		insertAfter: function ( newNode, referenceNode ) {
 			referenceNode.parentNode.insertBefore( newNode, referenceNode.nextSibling );
@@ -168,5 +233,6 @@
         // Browser: Expose to window
         window.Cedar = Cedar;
       }
+      */
 
 })();
