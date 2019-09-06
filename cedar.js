@@ -27,9 +27,32 @@ Cedar.prototype = {
 
 Cedar.prototype.nodes = [];
 
+Cedar.prototype.args = function ( args, node, i ) {
+    if ( typeof args === 'function' ) {
+        args 
+    }
+}
+
 Cedar.prototype.each = function ( callback ) {
     // http://stackoverflow.com/q/4065353
     this.nodes.forEach( callback.bind( this ) );
+
+    return this;
+};
+
+Cedar.prototype.eacharg = function ( args, callback ) {
+    return this.each( function ( node, i ) {
+        this.args( args, node, i ).forEach( function ( arg ) {
+            // http://stackoverflow.com/q/4065353
+            callback.call( this, node, arg );
+        });
+    }, this);
+};
+
+Cedar.prototype.classes.add = function ( className ) {
+    this.nodes.each(function () {
+
+    })
 
     return this;
 };
