@@ -25,13 +25,36 @@ Cedar.prototype = {
     }
 };
 
+Cedar.prototype.slice = function ( pseudo ) {
+    if ( ! pseudo || pseudo.length === 0 || typeof pseudo === 'string' || pseudo.toString() === '[object Function]' ) {
+        return [];
+    }
+    return pseudo.length ? [].slice.call( pseudo.nodes || pseudo ) : [pseudo];
+}
+
+Cedar.prototype.str = function ( node, i ) {
+    return function ( arg ) {
+        if ( typeof arg === 'function' ) {
+            return arg.call( this, node, i );
+        }
+        return arg.toString();
+    }
+}
+
 Cedar.prototype.nodes = [];
 
 Cedar.prototype.args = function ( args, node, i ) {
     if ( typeof args === 'function' ) {
-        args 
+        args = args( node, i );
     }
-}
+
+    if ( typeof args !== 'string' ) {
+        args = this.slice( args ).map( this.str( node, i ) );
+    }
+    return args.toString().split(/[\s,]+/).filter( function (e) {
+        return e.length;
+    });
+};
 
 Cedar.prototype.each = function ( callback ) {
     // http://stackoverflow.com/q/4065353
@@ -45,34 +68,69 @@ Cedar.prototype.eacharg = function ( args, callback ) {
         this.args( args, node, i ).forEach( function ( arg ) {
             // http://stackoverflow.com/q/4065353
             callback.call( this, node, arg );
-        });
-    }, this);
+        }, this);
+    });
 };
 
-Cedar.prototype.classes.add = function ( className ) {
-    this.nodes.each(function () {
-
-    })
+Cedar.prototype.addClass = function () {
+    return this.eacharg( arguments, function ( el, name ) {
+        el.classList.add( name );
+    });
+};
+Cedar.prototype.removeClass = function () {
+    this.eacharg( arguments, function ( el, name ) {
+        el.classList.remove( name );
+    });
 
     return this;
 };
+Cedar.prototype.toggleClass = function () {
+    this.eacharg( arguments, function ( el, name ) {
+        el.classList.toggle( name );
+    });
+
+    return this;
+};
+
+Cedar.prototype.addEvent = function () {
+    this.eacharg( arguments, function ( el, name ) {
+        el.classList.toggle( name );
+    });
+
+    return this;
+};
+
+Cedar.prototype.addBefore = function ( newNode ) {
+    for ( var i = 0; i < this.nodes.length; i++ ) {
+        this.eacharg( arguments, function ( el, node ) {
+            el.parentNode.insertBefore( node, el );
+        });
+    }
+    return this;
+};
+Cedar.prototype.addAfter = function ( newNode ) {
+    for ( var i = 0; i < this.nodes.length; i++ ) {
+        this.eacharg( arguments, function ( el, node ) {
+            el.parentNode.insertBefore( node, el.nextSibling );
+        });
+    }
+    return this;
+};
+
+var c = function( selector, context ) {
+    return Cedar( selector, context );
+};
+
+
 /*
-Cedar.prototype.eacharg = function ( args, callback ) {
-    return this.each( function ( node, i ) {
+var c = function ( selector, context ) {
 
-    })
-}
-*/
-
-
-    /*
     var Cedar = function () {
         this.context = context;
         this.nodes = context ? context.querySelectorAll( selector ) : document.querySelectorAll( selector );
     };
-    */
     Cedar.prototype.classes = function () {
-        return this;
+        return this.nodes;
     };
 
     Cedar.prototype.classes.add = function ( className ) {
@@ -98,7 +156,7 @@ Cedar.prototype.eacharg = function ( args, callback ) {
         return this;
     };
 
-    Cedar.prototype.events.on( event, handler, capture ) {
+    Cedar.prototype.events.on = function ( event, handler, capture ) {
         capture = capture == null ? false : true;
         var events = event.split(/ /);
         for ( i = 0; i < events.length; i++ ) {
@@ -109,7 +167,7 @@ Cedar.prototype.eacharg = function ( args, callback ) {
         return this;
     };
 
-    Cedar.prototype.events.off( event, handler, capture ) {
+    Cedar.prototype.events.off = function ( event, handler, capture ) {
         capture = capture == null ? false : true;
         var events = event.split(/ /);
         for ( i = 0; i < events.length; i++ ) {
@@ -120,7 +178,7 @@ Cedar.prototype.eacharg = function ( args, callback ) {
         return this;
     };
 
-    Cedar.prototype.events.dispatch( event ) {
+    Cedar.prototype.events.dispatch = function ( event ) {
         if ( this.context.createEvent ) {
             // dispatch for firefox + others
             for ( var i = 0; i < this.nodes.length; i++ ) {
@@ -153,11 +211,7 @@ Cedar.prototype.eacharg = function ( args, callback ) {
 	};
 
 };
-
-var c = function( selector, context ) {
-    Cedar( selector, context );
-};
-
+/*
 /*
 Cedar.requestPlainText = function ( options ) {
 
